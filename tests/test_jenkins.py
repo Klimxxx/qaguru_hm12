@@ -1,38 +1,57 @@
+import os
+
 import allure
-from selene.support import by
+from selene import have, command
 from selene.support.conditions import be
 from selene.support.shared import browser
-from selene.support.shared.jquery_style import s
 
 from utils import attach
 
+@allure.step("Успешная регистрация")
+def test_open_page_remove_ad():
+    browser.open('/automation-practice-form')
+    browser.execute_script("$('#adplus-anchor'). remove ()")
+    with allure.step("Вводим данные"):
+        browser.element('[id=firstName]').should(be.blank).type('Elena')
+        browser.element('[id=lastName]').should(be.blank).type('Pirogova')
+        browser.element('[id=userEmail]').should(be.blank).type('123@123.ru')
+        browser.element('[id^=gender-radio][value=Female]+label').click()
+        browser.element('[id=userNumber]').should(be.blank).type('8987654321')
+        browser.element('#dateOfBirthInput').click()
+        browser.element('select[class^=react-datepicker__year]').send_keys('1989')
+        browser.element('.react-datepicker__month-select').send_keys('January')
+        browser.element('[aria-label= "Choose Monday, January 2nd, 1989"]').click()
+        browser.element('#subjectsInput').send_keys('English')
+        browser.all('[id^=react-select][id*=option]').element_by(have.exact_text('English')).click()
+        browser.element('[id="hobbies-checkbox-2"]+label').perform(command.js.scroll_into_view).click()
+        browser.element('#uploadPicture').set_value(
+            os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, 'resources/image.png')))
+        browser.element('[id=currentAddress]').should(be.blank).type('Kazakhstan')
+        browser.element('#state').perform(command.js.scroll_into_view).click().all(
+            '[id^=react-select][id*=option]').element_by(have.exact_text('NCR')).click()
+        browser.element('#city').click()
+        browser.element('[id="react-select-4-option-0"]').click()
+        browser.element('#submit').click()
 
-def test_azalia_decorator_steps():
-    open_main_page("https://azalianow.ru/")
-    close_advertising()
-    search_flower("Хризантема")
-    check_result("Хризантема")
+    with allure.step("Проверяем результат"):
+        browser.element('.table').all('td').should(have.texts(
+                'Student Name', 'Elena Pirogova',
+                'Student Email', '123@123.ru',
+                   'Gender', 'Female',
+                'Mobile', '8987654321',
+                'Date of Birth', '2 January,1989',
+                'Subjects', 'English',
+                'Hobbies', 'Reading',
+                'Picture', 'image.png',
+                'Address', 'Kazakhstan',
+                'State and City', 'NCR Delhi'
+            ))
 
 
-@allure.step("Открываем главную страницу")
-def open_main_page(mainpage):
-    browser.open(mainpage)
-
-
-@allure.step("Закрываем рекламу")
-def close_advertising():
-    s("[class^='MobileAppAdvertModal_modalCloseBtn']").click()
-
-
-@allure.step("Ищем в поиске цветок {flower}")
-def search_flower(flower):
-    s("[inputmode=search]").send_keys(flower).press_enter()
-
-
-@allure.step("Проверяем наличие текста хризантема в результатах поиска")
-def check_result(flower):
-    s(by.partial_text(flower)).should(be.visible)
-
-    attach.add_html(browser)
-    attach.add_screenshot(browser)
-    attach.add_logs(browser)
+# @allure.step("Проверяем наличие текста хризантема в результатах поиска")
+# def check_result(flower):
+#     s(by.partial_text(flower)).should(be.visible)
+#
+#     attach.add_html(browser)
+#     attach.add_screenshot(browser)
+#     attach.add_logs(browser)
