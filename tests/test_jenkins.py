@@ -1,16 +1,19 @@
 import os
-
 import allure
-from selene import have, command
-from selene.support.conditions import be
+from selene import have, command, browser
 from selene.support.shared import browser
 
-from utils import attach
+from selene.support.conditions import be
+
 
 @allure.step("Успешная регистрация")
 def test_open_page_remove_ad():
-    browser.open('/automation-practice-form')
-    browser.execute_script("$('#adplus-anchor'). remove ()")
+    browser.open("https://demoqa.com/automation-practice-form")
+    browser.execute_script('document.querySelector(".body-height").style.transform = "scale(.5)"')
+
+    # browser.execute_script("$('#adplus-anchor'). remove ()")
+    # browser.driver.execute_script("$('#fixedban').remove()")
+
     with allure.step("Вводим данные"):
         browser.element('[id=firstName]').should(be.blank).type('Elena')
         browser.element('[id=lastName]').should(be.blank).type('Pirogova')
@@ -31,13 +34,14 @@ def test_open_page_remove_ad():
             '[id^=react-select][id*=option]').element_by(have.exact_text('NCR')).click()
         browser.element('#city').click()
         browser.element('[id="react-select-4-option-0"]').click()
-        browser.element('#submit').click()
+        browser.driver.set_window_size(400, 1000)
+        browser.element('#submit').perform(command.js.scroll_into_view).click()
 
-    with allure.step("Проверяем результат"):
+    # with allure.step("Проверяем результат"):
         browser.element('.table').all('td').should(have.texts(
                 'Student Name', 'Elena Pirogova',
                 'Student Email', '123@123.ru',
-                   'Gender', 'Female',
+                'Gender', 'Female',
                 'Mobile', '8987654321',
                 'Date of Birth', '2 January,1989',
                 'Subjects', 'English',
